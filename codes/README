@@ -1,0 +1,4 @@
+This folder contains the codes to be optimized to GPU via different implementations.
+Codes are structured by problem. One folder per problem including all relevant information.
+Please, include a short PDF in each folder explaining briefly the motivation of the problem,
+its usage, and some details on the sequential implementation.
