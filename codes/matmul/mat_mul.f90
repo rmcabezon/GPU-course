@@ -4,8 +4,8 @@
         
         integer icrow,iccol
         integer ic,i,j
-        integer,parameter :: a_row=1623, a_col=902, a_elem=a_row*a_col
-        integer,parameter :: b_row=902, b_col=1123, b_elem=b_row*b_col
+        integer,parameter :: a_row=840, a_col=3230, a_elem=a_row*a_col
+        integer,parameter :: b_row=3230, b_col=802, b_elem=b_row*b_col
         integer,parameter :: c_row=a_row, c_col=b_col, c_elem=c_row*c_col        
 
         integer, dimension(12) :: seed=(/3,6,1,2,8,4,2,9,0,4,5,6/)
@@ -16,7 +16,10 @@
         double precision, dimension(a_elem) :: a_temp
         double precision, dimension(b_elem) :: b_temp
 
-        double precision num,sum
+        double precision num,sum,t1,t2
+
+        logical, parameter :: validation=.false.
+        logical, parameter :: print_result=.false.
 
         if(a_col.ne.b_row) stop 'Wrong matrices dimensions'
                 
@@ -35,38 +38,41 @@
         b = transpose(reshape(b_temp,(/ size(b, 2), size(b, 1) /)))       
 
 
+        call cpu_time(t1)
         !matrix multiplication
         c=0.d0
-        iccol=0
         do ic=1,c_elem
            icrow=mod(ic-1,c_row)+1
-           if(icrow.eq.1) iccol=iccol+1
+           iccol=(ic-1)/c_row+1
            do i=1,a_col
               c(icrow,iccol)=c(icrow,iccol)+a(icrow,i)*b(i,iccol)
-           enddo           
+           enddo
         enddo
+        call cpu_time(t2)
 
-        
+        print *,'Elapsed time:',t2-t1
+
         !Print result
-!        do icrow=1,c_row
-!           print '(20(1x,f12.5))', (c(icrow,iccol),iccol=1,c_col)
-!        enddo
+        if(print_result) then
+           do icrow=1,c_row
+              print '(20(1x,f12.5))', (c(icrow,iccol),iccol=1,c_col)
+           enddo
+        endif
 
         
         !Validation
-!        c_ref=matmul(a,b)
 
-!        do i=1,c_row
-!           do j=1,c_col
-!              sum=sum+c(i,j)-c_ref(i,j)
-!           enddo
-!        enddo
-!        print *,sum,sum/dble(c_elem)
-        
-!        do icrow=1,c_row
-!           print '(20(1x,f12.5))', (c(icrow,iccol),iccol=1,c_col)
-!        enddo
-        
+        if(validation) then
+           c_ref=matmul(a,b)
+
+           do i=1,c_row
+              do j=1,c_col
+                 sum=sum+c(i,j)-c_ref(i,j)
+              enddo
+           enddo
+           print *,sum,sum/dble(c_elem)
+        endif
+
       end program matmul_prog
            
               
