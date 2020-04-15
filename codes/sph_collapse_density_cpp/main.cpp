@@ -2,20 +2,23 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <chrono>
+
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::time_point<Clock> TimePoint;
+typedef std::chrono::duration<double> Time;
 
 #define PI 3.14159265358979323846
 
 using namespace std;
 
-struct ParticleData
+// Ignore this
+double elapsedTime(TimePoint start, TimePoint stop)
 {
-	ParticleData(size_t n, size_t ngmax) : n(n), ngmax(ngmax), x(n), y(n), z(n), h(n), m(n), ro(n), neighborsCount(n), neighbors(n * ngmax) {}
-	
-	size_t n, ngmax;
-	vector<double> x, y, z, h, m, ro;
-	vector<int> neighborsCount, neighbors;
-};
+	return std::chrono::duration_cast<Time>(stop-start).count();
+}
 
+// Also this
 double compute_3d_k(double n)
 {
     double b0 = 2.7012593e-2;
@@ -26,27 +29,25 @@ double compute_3d_k(double n)
     return b0 + b1 * std::sqrt(n) + b2 * n + b3 * std::sqrt(n * n * n);
 }
 
-
-double wharmonic_std(double v)
+// This is the SPH Kernel, but you can ignore it too
+double wharmonic(double v)
 {
     if (v == 0.0) return 1.0;
-
     const double Pv = (PI / 2.0) * v;
-
     return std::sin(Pv) / Pv;
 }
 
-
-double wharmonic_derivative_std(double v)
+// Structure that contains the position, mass and neighbors of every particles
+struct ParticleData
 {
-    if (v == 0.0) return 0.0;
+	ParticleData(size_t n, size_t ngmax) : n(n), ngmax(ngmax), x(n), y(n), z(n), h(n), m(n), ro(n), neighborsCount(n), neighbors(n * ngmax) {}
+	
+	size_t n, ngmax;
+	vector<double> x, y, z, h, m, ro;
+	vector<int> neighborsCount, neighbors;
+};
 
-    const double Pv = (PI / 2.0) * v;
-    const double sincv = std::sin(Pv) / (Pv);
-
-    return sincv * (PI / 2.0) * ((std::cos(Pv) / std::sin(Pv)) - 1.0 / Pv);
-}
-
+// Compute density here
 void compute_density(ParticleData &particles)
 {
 	size_t n = particles.n;
@@ -65,6 +66,7 @@ void compute_density(ParticleData &particles)
 
     const double K = compute_3d_k(6.0);
 
+    // OpenMP and offloading directives go here!
     for (size_t i = 0; i < n; i++)
     {
         const int nn = neighborsCount[i];
@@ -81,7 +83,8 @@ void compute_density(ParticleData &particles)
 
 		    double dist = std::sqrt(xx * xx + yy * yy + zz * zz);
 
-            double vloc = dist / h[i];
+		    // SPH Kernel
+            double vloc = wharmonic(dist / h[i]);
 
             const double w = K * vloc * vloc * vloc * vloc * vloc * vloc;
             const double value = w / (h[i] * h[i] * h[i]);
@@ -93,8 +96,14 @@ void compute_density(ParticleData &particles)
 	}
 }
 
+// You can pretty much ignore this one too
+// It reads the input file
+// Initializes the ParticleData structure
+// Calls compute_density
+// Write the result in out.txt 
 int main(int argc, char **argv)
 {
+	// Read input file
     std::ifstream in;
     in.open("/home/acavelan/git/miniapp/pdata", std::ofstream::out | std::ofstream::binary);
 
@@ -122,8 +131,14 @@ int main(int argc, char **argv)
 
     in.close();
 
-   	compute_density(p);
+    // Call the main function with a timer
+   	TimePoint tstart = Clock::now();
+	compute_density(p);
+	TimePoint tstop = Clock::now();
 
+	cout << elapsedTime(tstart, tstop) << endl;
+
+   	// Write the result
    	std::ofstream out;
     out.open("density.txt", std::ofstream::out);
 
