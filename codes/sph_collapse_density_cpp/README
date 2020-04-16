@@ -1,0 +1,17 @@
+Compile with:
+
+g++ -O2 -fopenmp main.cpp
+
+In main.cpp, check that the file path for the input is correct.
+This will outout a file named density.txt which contains the new computed values.
+
+To plot the results, use:
+
+gnuplot -p plot.gnu
+
+
+Exercise:
+1) Add OpenMP directives to enable parallel execution with threads
+2) Add OpenMP 4.5 directives to enable GPU offloading
+
+Tip: You only need to modify one line (indicated with a comment) before the main loop.
