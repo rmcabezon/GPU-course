@@ -18,7 +18,7 @@
 
         double precision num,sum,t1,t2,OMP_GET_WTIME
 
-        logical, parameter :: validation=.false.
+        logical, parameter :: validation=.true.
         logical, parameter :: print_result=.false.
 
         if(a_col.ne.b_row) stop 'Wrong matrices dimensions'
