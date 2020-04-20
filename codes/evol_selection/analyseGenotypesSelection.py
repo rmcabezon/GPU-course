@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import os
 
 @jit
 def transformAlignment(genotypes):
@@ -41,13 +42,19 @@ def writeAlignmentFile(alignment,subindx,filename,S):
 
 ID=sys.argv[1]
 
-infile=open(ID+"/selectionGenotypes4Letters_"+ID+".pkl",'rb')
-subindx=pkl.load(infile)
-N=pkl.load(infile)
-L=pkl.load(infile)
-subgenotypes = pkl.load(infile)
-reference = pkl.load(infile)
-infile.close()
+if os.path.isfile(ID+"/selectionGenotypes4Letters_"+ID+".pkl"):
+    infile=open(ID+"/selectionGenotypes4Letters_"+ID+".pkl",'rb')
+    subindx=pkl.load(infile)
+    N=pkl.load(infile)
+    L=pkl.load(infile)
+    subgenotypes = pkl.load(infile)
+    reference = pkl.load(infile)
+    infile.close()
+else:
+    subgenotypes=np.loadtxt(ID+"/subgenotypes_"+ID+".csv", delimiter=',')
+    reference=np.loadtxt(ID+"/reference_"+ID+".csv", delimiter=',')
+    subindx=np.loadtxt(ID+"/subindx_"+ID+".csv", delimiter=',')
+ 
 logfile = open(ID+"/"+ID+".log",'r')
 logtable = logfile.readlines()
 logfile.close()

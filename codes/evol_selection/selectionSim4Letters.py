@@ -87,6 +87,7 @@ parser.add_argument("-p", "--fractionvariable", type=float, help="the fraction o
 parser.add_argument("-s", "--selectionc", type=float, help="multiplicative cost of a single mutation", default=1.0)
 parser.add_argument("-I", "--ID", help="the ID of the simulation run", required=True)
 parser.add_argument("-L", "--genomelength", type=int, help="length of genome in 64 bp blocks", default=40000)
+parser.add_argument("-u", '--uncompressed', help="store the genomes and reference uncrompressed", action='count')
 args = parser.parse_args()
 
 if args.verbose:
@@ -102,6 +103,7 @@ blocks = args.blocks
 N=threadsperblock*blocks
 S=args.samplesize
 s=args.selectionc
+u=args.uncompressed
 p2=fsolve(mufunct,0.000001,args=(N,S))[0]
 if args.verbose:
     print("p2: "+str(p2))
@@ -181,13 +183,19 @@ if args.verbose:
     print("copying of data to memory: "+str(evolve_time)+"\n")
 logfile.write("copying of data to memory: "+str(evolve_time)+"\n")
 
-outfile=open(ID+"/selectionGenotypes4Letters_"+ID+".pkl",'wb')
-pkl.dump(subindx, outfile)
-pkl.dump(N, outfile)
-pkl.dump(L, outfile)
 subset = [(i in subindx) for i in range(N) ]
 subgenotypes = genotypes[subset,:(2*L)]
-pkl.dump(subgenotypes, outfile)
-pkl.dump(reference, outfile)
-outfile.close()
+
+if u==0:
+    outfile=open(ID+"/selectionGenotypes4Letters_"+ID+".pkl",'wb')
+    pkl.dump(subindx, outfile)
+    pkl.dump(N, outfile)
+    pkl.dump(L, outfile)
+    pkl.dump(subgenotypes, outfile)
+    pkl.dump(reference, outfile)
+    outfile.close()
+else:
+    np.savetxt(ID+"/subgenotypes_"+ID+".csv", subgenotypes, fmt='%d', delimiter=',')
+    np.savetxt(ID+"/reference_"+ID+".csv", reference, fmt='%d', delimiter=',')
+    np.savetxt(ID+"/subindx_"+ID+".csv", subindx, fmt='%d', delimiter=',')
 logfile.close()
