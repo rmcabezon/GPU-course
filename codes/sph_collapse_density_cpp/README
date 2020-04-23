@@ -1,9 +1,15 @@
-Compile with:
-
+C++:
 g++ -O2 -fopenmp main.cpp
 
 In main.cpp, check that the file path for the input is correct.
 This will outout a file named density.txt which contains the new computed values.
+
+Python:
+
+Install Numba first: https://numba.pydata.org/numba-doc/dev/user/installing.html
+
+conda install numba
+conda install cudatoolkit
 
 To plot the results, use:
 
