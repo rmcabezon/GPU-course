@@ -1,0 +1,22 @@
+naive.cpp: 
+i,j,k loops where Cij = sum over k Aik * Bkj (source: Wikipedia)
+This is column-major (bad). Lots of cache misses. Performance limited by memory access.
+
+order.cpp:
+i,k,j loops. Loops are in a different order.
+This is row-major (good). Drastically reduces the number of cache misses and improve performance by an order of magnitude.
+
+threads.cpp:
+Adding OpenMP directives for threading.
+
+target.cpp:
+Adding OpenMP directives for OpenMP target (GPU) Offloading.
+
+cuda.cu:
+Needs to be compiled with nvcc. Uses CUDA to run the code on a GPU.
+
+run.sh:
+runs the different versions to generate execution time data.
+
+plot.sh:
+plot the execution times generated with run.sh.

@@ -14,4 +14,4 @@ Exercise:
 1) Add OpenMP directives to enable parallel execution with threads
 2) Add OpenMP 4.5 directives to enable GPU offloading
 
-Tip: You only need to modify one line (indicated with a comment) before the main loop.
+Tip: You only need to modify one line (indicated with comments) before the main loop.

@@ -12,10 +12,8 @@ typedef std::chrono::duration<double> Time;
 
 using namespace std;
 
-// Ignore this
 double elapsedTime(TimePoint start, TimePoint stop) { return std::chrono::duration_cast<Time>(stop - start).count(); }
 
-// Also this
 double compute_3d_k(double n)
 {
     double b0 = 2.7012593e-2;
@@ -26,7 +24,7 @@ double compute_3d_k(double n)
     return b0 + b1 * std::sqrt(n) + b2 * n + b3 * std::sqrt(n * n * n);
 }
 
-// This is the SPH Kernel, but you can ignore it too
+// This is the SPH Kernel
 double wharmonic(double v)
 {
     if (v == 0.0) return 1.0;
@@ -47,9 +45,10 @@ struct ParticleData
 // Compute density here
 void compute_density(ParticleData &particles)
 {
-    size_t n = particles.n;
-    size_t ngmax = particles.ngmax;
-
+    const size_t n = particles.n;
+    const size_t ngmax = particles.ngmax;
+    const size_t ng = n * ngmax;
+    
     const double *h = particles.h.data();
     const double *m = particles.m.data();
     const double *x = particles.x.data();
@@ -64,6 +63,16 @@ void compute_density(ParticleData &particles)
     const double K = compute_3d_k(6.0);
 
     // OpenMP and offloading directives go here!
+    // Tells OpenMP how to send the data to/from the GPU. Arrays must be C pointers.
+    // target specifies offloading to an accelerator
+    // teams distribute will be used by OpenMP when appropriate (like on a GPU)
+    // e.g. this will create teams of threads to match the GPU architecture
+    // this is equivalent to creating a grid of blocks in CUDA
+    // The parallel for is then applied per thread team / block of threads
+    // In Case you don't have a GPU available, it will still work and basically only apply the parallel for!
+    #pragma omp target map(to: neighbors[:ng], neighborsCount[:n], m[0:n], h[0:n], x[0:n], y[0:n], z[0:n]) \
+            map(from: ro[:n])
+    #pragma omp teams distribute parallel for
     for (size_t i = 0; i < n; i++)
     {
         const int nn = neighborsCount[i];
@@ -93,7 +102,6 @@ void compute_density(ParticleData &particles)
     }
 }
 
-// You can pretty much ignore this one too
 // It reads the input file
 // Initializes the ParticleData structure
 // Calls compute_density
