@@ -40,6 +40,9 @@ int main(int argc, char **argv)
 	if(argc > 1)
 		n = atoi(argv[1]);
 
+	// Force initialize CUDA
+	cudaFree(0);
+
 	srand(12);
 
 	float *m1 = nullptr, *m2 = nullptr, *m3 = nullptr;

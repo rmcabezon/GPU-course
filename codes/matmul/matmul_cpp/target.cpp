@@ -23,6 +23,18 @@ int main(int argc, char **argv)
 	if(argc > 1)
 		n = atoi(argv[1]);
 
+	int A[1] = {-1};
+	#pragma omp target
+	{
+	  A[0] = omp_is_initial_device();
+	}
+
+	if(A[0])
+	{
+		printf("Not using the accelerator device!\n");
+		return -1;
+	}
+	
 	srand(12);
 
 	float *m1 = new float[n*n];
