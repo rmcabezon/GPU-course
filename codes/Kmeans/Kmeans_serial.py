@@ -142,7 +142,7 @@ def KmeanRound( points , centroids ):
 	newCentroids = computeCentroids( points , assignment , len(centroids) )
 	return newCentroids,assignment
 
-def Kmeans( points , k , maxNbRounds=1000 ):
+def Kmeans( points , k , maxNbRounds=1000 , assignment = None ):
 	"""
 	<points> is a 'number of dimensions'*n array
 	<k> : number of clusters
@@ -154,8 +154,9 @@ def Kmeans( points , k , maxNbRounds=1000 ):
 	nbPoints = points.shape[1]
 
 	#1. initialization 
-	#I use the random assignment here.
-	assignment = np.random.randint(0,k,nbPoints)
+	if assignment is None:
+		#I use the random assignment here.
+		assignment = np.random.randint(0,k,nbPoints)
 
 	centroids = computeCentroids( points , assignment , k )
 	round = 1
@@ -174,7 +175,7 @@ def Kmeans( points , k , maxNbRounds=1000 ):
 			assignment = np.random.randint(0,k,nbPoints)
 			centroids = computeCentroids( points , assignment , k )
 
-		print("round {}, {:.2%} points changed assignment".format(round,nbChanged/nbPoints))
+		#print("round {}, {:.2%} points changed assignment".format(round,nbChanged/nbPoints))
 		round+=1
 		#plotClusters( points , assignment , assignment , dimX=0 , dimY=1 )
 		#plt.show()
@@ -196,7 +197,7 @@ if __name__ == "__main__":
 	# generating data
 
 	## 3 clusters of points 
-	clusterSizes = [2000,1000,2000,2000,1000 ]
+	clusterSizes = [4000,2000,4000,4000,2000 ]
 	clusterMeans = [ [ 0 , -2 ] ,
 					 [ 3 , 3 ] ,
 					 [ -1 , 3 ], 
@@ -226,18 +227,18 @@ if __name__ == "__main__":
 	# reporting.
 	print( "finished in",t1-t0,'seconds' )
 
-	## plotting : color are the Kmean assignment, symbols are the real assignment
-	# OK up until 22 real assignments
-	plotClusters( Points , kmeanAssignment , realAssignment , dimX=0 , dimY=1 )
-	plt.show()
-
-
-	### sk learn version
-	from sklearn.cluster import KMeans as scKmeans
-	X = Points.T ## scikit learn expects another shpae for the points
-	t0 = time.time()
-	kmeans = scKmeans(n_clusters=k, random_state=0).fit(X)
-	t1 = time.time()
-	print('scikit-learn :',t1-t0,'seconds')
+#	## plotting : color are the Kmean assignment, symbols are the real assignment
+#	# OK up until 22 real assignments
+#	plotClusters( Points , kmeanAssignment , realAssignment , dimX=0 , dimY=1 )
+#	plt.show()
+#
+#
+#	### sk learn version
+#	from sklearn.cluster import KMeans as scKmeans
+#	X = Points.T ## scikit learn expects another shpae for the points
+#	t0 = time.time()
+#	kmeans = scKmeans(n_clusters=k, random_state=0).fit(X)
+#	t1 = time.time()
+#	print('scikit-learn :',t1-t0,'seconds')
 
 
