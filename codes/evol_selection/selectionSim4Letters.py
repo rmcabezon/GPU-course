@@ -87,7 +87,7 @@ parser.add_argument("-p", "--fractionvariable", type=float, help="the fraction o
 parser.add_argument("-s", "--selectionc", type=float, help="multiplicative cost of a single mutation", default=1.0)
 parser.add_argument("-I", "--ID", help="the ID of the simulation run", required=True)
 parser.add_argument("-L", "--genomelength", type=int, help="length of genome in 64 bp blocks", default=40000)
-parser.add_argument("-u", '--uncompressed', help="store the genomes and reference uncrompressed", action='count')
+parser.add_argument("-u", '--uncompressed', help="store the genomes and reference uncrompressed", action='count',default=0)
 args = parser.parse_args()
 
 if args.verbose:
