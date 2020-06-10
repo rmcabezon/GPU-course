@@ -74,8 +74,8 @@ def evolve(rng_states,gen,numberGenerations,genotypes,reference,binomcdf,fitness
         cuda.syncthreads()
 
 from scipy.optimize import fsolve
-def mufunct(mu,N,S):
-    return np.prod([1/(1+2*mu*N/(k-1)) for k in range(2,S+1)])-0.9
+def mufunct(mu,N,S,fractionvariable):
+    return np.prod([1/(1+2*mu*N/(k-1)) for k in range(2,S+1)])-fractionvariable
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, help="the seed of the simulation (default=1)", default=0)
@@ -104,7 +104,8 @@ N=threadsperblock*blocks
 S=args.samplesize
 s=args.selectionc
 u=args.uncompressed
-p2=fsolve(mufunct,0.000001,args=(N,S))[0]
+fractionvariable=args.fractionvariable
+p2=fsolve(mufunct,0.000001,args=(N,S,fractionvariable))[0]
 if args.verbose:
     print("p2: "+str(p2))
 binomcdf = np.zeros((100),dtype=np.float32)
