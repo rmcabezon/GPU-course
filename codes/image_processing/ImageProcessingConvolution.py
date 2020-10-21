@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import filters, io
 
+
 def read_image(image_path, tiles_per_dimension=1):
     # read image and normalize
     image = io.imread(image_path).astype(np.float32)
@@ -25,6 +26,7 @@ def read_image(image_path, tiles_per_dimension=1):
     image /= np.max(image)
     image = np.tile(image, (tiles_per_dimension, tiles_per_dimension))
     return image
+
 
 def keep_valid_image(filtered_image, filter):
     # ignore edges, which are not a valid result
@@ -46,6 +48,14 @@ def show_image(image_orig, image_filtered):
         ax.axis('off')
     plt.tight_layout()
     plt.show()
+
+
+def get_blocks_per_grid(threads_per_block, image_shape):
+    image_shape = np.max(image_shape)  # since our image has roughly square shape: (539, 540), we do choose same size for both dimensions
+    blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
+    blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
+    return (blocks_per_grid_x, blocks_per_grid_y)
+
 
 from contextlib import contextmanager
 @contextmanager
@@ -85,7 +95,8 @@ show_image(image, edges_sobel_v)
 from numba import jit
 
 # kernel definition
-@jit(nopython=True, parallel=True)
+# @jit(nopython=True, parallel=True)
+@jit(nopython=True)
 def filter2d_cpu(image, filt, result):
     image_height, image_width = image.shape
     filter_height, filter_width = filt.shape
@@ -170,12 +181,7 @@ filter_height_halved = filter_height // 2
 filter_width_halved = filter_width // 2
 
 threads_per_block = (16, 16)
-image_shape = image.shape[0]
-blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
-blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
-blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
-
-# filter vertical edges with sobel_v_filter
+blocks_per_grid = get_blocks_per_grid(threads_per_block, image.shape)
 
 # resCPU = %timeit -n 2 -r 10 -o filter2d_cpu(image, sobel_v_filter, edges_sobel_v)
 with timeit_context('CPU performance:'):
@@ -209,15 +215,8 @@ edges_sobel_v = np.zeros_like(image)
 # Define sobel filter for vertical edges
 sobel_v_filter = (1. / 4) * np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
 
-filter_height, filter_width = sobel_v_filter.shape
-filter_height_halved = filter_height // 2
-filter_width_halved = filter_width // 2
-
 threads_per_block = (16, 16)
-image_shape = image.shape[0]
-blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
-blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
-blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
+blocks_per_grid = get_blocks_per_grid(threads_per_block, image.shape)
 
 # filter vertical edges with sobel_v_filter
 
@@ -255,10 +254,7 @@ sobel_v_filter = (1. / 4) * np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype
 # filter_width_halved = filter_width // 2
 
 threads_per_block = (16, 16)
-image_shape = image.shape[0]
-blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
-blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
-blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
+blocks_per_grid = get_blocks_per_grid(threads_per_block, image.shape)
 
 with timeit_context('GPU processing time with transfer'):
     filter2d_gpu[blocks_per_grid, threads_per_block](image, sobel_v_filter, edges_sobel_v)
@@ -351,10 +347,7 @@ image = read_image(image_path, 10)
 edges_sobel_v = np.zeros_like(image)
 
 threads_per_block = (16, 16)
-image_shape = image.shape[0]
-blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
-blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
-blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
+blocks_per_grid = get_blocks_per_grid(threads_per_block, image.shape)
 
 # copy to arrays to device memory before processing
 stream = cuda.stream()
@@ -431,10 +424,7 @@ image = read_image(image_path, 10)
 edges_sobel_v = np.zeros_like(image)
 
 threads_per_block = (16, 16)
-image_shape = image.shape[0]
-blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
-blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
-blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
+blocks_per_grid = get_blocks_per_grid(threads_per_block, image.shape)
 
 # copy to arrays to device memory before processing
 stream = cuda.stream()
