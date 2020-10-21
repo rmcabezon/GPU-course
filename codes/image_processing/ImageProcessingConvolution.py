@@ -382,16 +382,84 @@ print("max pixel value: " + str(np.max(edges_sobel_v)))
 
 ### Local memory
 
-# Now let's improve performance by using constant memory of the GPU:
-# Constant memory is a small cache (e.g. ~64kB) that is faster than global memory. It is assigned from the host to the
-# GPU and unaltered during kernel execution. Therefore it is a good fit for our filter-array, which is constant during
-# processing.
+# Global memory is the slowest memory on the GPU. In our current implementation each thread is accessing global memory
+# separately to obtain its respective pixel and neighborhood. Since the neighborhoods of adjacent pixels overlap, we can
+# optimize the access to global memory by first copying all relevant pixels of the block to the local memory and use
+# local memory for the processing.
+# This is shown in the following example.
 
-# Links on using constant memory in numba.cuda:
-# https://stackoverflow.com/questions/63311574/in-numba-how-to-copy-an-array-into-constant-memory-when-targeting-cuda
-# https://github.com/numba/numba/issues/4057
-# Link on memory in GPU:
-# https://www.paranumal.com/single-post/2018/02/26/basic-gpu-optimization-strategies
+# block <-> workgroup
+
+#%%
+from numba import cuda
+
+# filter array needs to be defined on host
+sobel_v_filter = (1. / 4) * np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
+
+# kernel definition
+@cuda.jit
+def filter2d_gpu_with_const_filter_and_local_memory(image, result):
+    const_filter = cuda.const.array_like(sobel_v_filter)  # assignment of host-memory/filter as constant memory on GPU
+
+    image_height, image_width = image.shape
+    filter_height, filter_width = const_filter.shape
+    filter_height_halved = filter_height // 2
+    filter_width_halved = filter_width // 2
+
+    row = cuda.blockIdx.y * cuda.blockDim.y + cuda.threadIdx.y
+    col = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+
+    if (row > filter_height_halved and row < image_height - filter_height_halved):
+        if (col > filter_width_halved and col < image_width - filter_width_halved):
+            sum = 0.0
+            for conv_index_y in range(-filter_height_halved, filter_height_halved + 1):
+                for conv_index_x in range(-filter_width_halved, filter_width_halved + 1):
+                    kernelCoord = filter_height_halved + conv_index_y, filter_width_halved + conv_index_x
+                    imageCoord = row + conv_index_y, col + conv_index_x
+                    sum += const_filter[kernelCoord] * image[imageCoord]
+            result[row, col] = sum
+
+#%%
+#%%
+import numpy as np
+import matplotlib.pyplot as plt
+from numba import cuda
+from skimage import io
+
+# read image and define output image
+image = read_image(image_path, 10)
+edges_sobel_v = np.zeros_like(image)
+
+threads_per_block = (16, 16)
+image_shape = image.shape[0]
+blocks_per_grid_x = int(np.ceil(image_shape / threads_per_block[0]))
+blocks_per_grid_y = int(np.ceil(image_shape / threads_per_block[1]))
+blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y)
+
+# copy to arrays to device memory before processing
+stream = cuda.stream()
+# with timeit_context('Transfer to GPU'):
+image_on_device = cuda.to_device(image, stream=stream)
+filter_on_device = cuda.to_device(sobel_v_filter, stream=stream)
+filtered_image_on_device = cuda.to_device(edges_sobel_v, stream=stream)
+cuda.synchronize()
+
+with timeit_context('GPU without constant memory'):
+    filter2d_gpu[blocks_per_grid, threads_per_block](image_on_device, filter_on_device, filtered_image_on_device)
+    cuda.synchronize()
+
+with timeit_context('GPU with constant memory'):
+    filter2d_gpu_with_const_filter[blocks_per_grid, threads_per_block](image_on_device, filtered_image_on_device)
+    cuda.synchronize()
+
+edges_sobel_v = filtered_image_on_device.copy_to_host()
+cuda.synchronize()
+
+print("min pixel value: " + str(np.min(edges_sobel_v)))
+print("max pixel value: " + str(np.max(edges_sobel_v)))
+
+
+
 
 #%%
 # Sources:
