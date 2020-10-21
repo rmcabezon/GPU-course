@@ -10,7 +10,7 @@ image /= np.max(image)
 image_shape = image.shape[0]
 
 # Sobel filter for vertical edges
-tmp = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+tmp = (1. / 4) * np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
 sobel_v_filter = (1. / 4) * np.array(tmp, dtype=np.float32)
 
 filter_height, filter_width = sobel_v_filter.shape
