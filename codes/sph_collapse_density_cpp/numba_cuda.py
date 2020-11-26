@@ -135,24 +135,37 @@ print('Elapsed time: ', end - start)
 # ======================
 
 ro = np.empty([n], dtype=np.double)
-nChunks = 16
+nChunks = 100
 start = time.time()
+
+dx = cuda.to_device(x)
+dy = cuda.to_device(y)
+dz = cuda.to_device(z)
+dh = cuda.to_device(h)
+dm = cuda.to_device(m)
+dro = cuda.to_device(ro)
+dneighborsCount = cuda.to_device(neighborsCount)
+
 for i in range(0,nChunks):
     chunkSize = int(n / nChunks)
-    print('Processing stream: ', i, ' with chunkSize: ', chunkSize)
+    offset = chunkSize * i
+    # print('Processing stream: ', i, ' with chunkSize: ', chunkSize, ' and offset: ', offset)
     stream = cuda.stream()
     
-    b = int(i * chunkSize * ngmax)
-    e = int((i+1)*chunkSize*ngmax)
+    b = i * chunkSize * ngmax
+    e = (i+1)*chunkSize*ngmax
     dneighbors = cuda.to_device(neighbors[b:e], stream=stream)
     
     K = compute_3d_k(6.0)
     threadsperblock = 32
     blockspergrid = (chunkSize + (threadsperblock - 1)) // threadsperblock
     start = time.time()
-    compute_density_cuda[blockspergrid, threadsperblock](n, ngmax, dneighbors, neighborsCount, x, y, z, h, m, ro, K)
+    compute_density_cuda[blockspergrid, threadsperblock, stream](n, ngmax, dneighbors, dneighborsCount, dx, dy, dz, dh, dm, dro, K, offset)
 
     stream.synchronize()
+    
+ro = dro.copy_to_host()
+
 end = time.time()
 print('Elapsed time: ', end - start)
 
