@@ -24,17 +24,23 @@ def wharmonic(v):
     return math.sin(Pv) / Pv;
 
 # Compute density here
-@njit(parallel=True)
-def compute_density(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro):
-    K = compute_3d_k(6.0);
-
-    for i in prange(0, n):
+@cuda.jit
+def compute_density_cuda(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro, K, offset=0):
+    tx = cuda.threadIdx.x
+    # Block id in a 1D grid
+    ty = cuda.blockIdx.x
+    # Block width, i.e. number of threads per block
+    bw = cuda.blockDim.x
+    # Compute flattened index inside the array
+    i = offset + tx + ty * bw
+    
+    if i < n:
         nn = neighborsCount[i];
 
         roloc = 0.0;
 
         for pj in prange(0, nn):
-            j = neighbors[i * ngmax + pj];
+            j = neighbors[(i-offset) * ngmax + pj];
 
             xx = x[i] - x[j];
             yy = y[i] - y[j];
