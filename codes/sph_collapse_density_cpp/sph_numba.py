@@ -24,7 +24,7 @@ def wharmonic(v):
     return math.sin(Pv) / Pv;
 
 # Compute density here
-@cuda.jit
+@njit
 def compute_density_cuda(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro, K, offset=0):
     tx = cuda.threadIdx.x
     # Block id in a 1D grid

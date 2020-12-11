@@ -27,17 +27,23 @@ def wharmonic(v):
     return math.sin(Pv) / Pv;
 
 # Compute density here
-@njit(parallel=True)
-def compute_density(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro):
-    K = compute_3d_k(6.0);
-
-    for i in prange(0, n):
+@cuda.jit
+def compute_density_cuda(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro, K, offset=0):
+    tx = cuda.threadIdx.x
+    # Block id in a 1D grid
+    ty = cuda.blockIdx.x
+    # Block width, i.e. number of threads per block
+    bw = cuda.blockDim.x
+    # Compute flattened index inside the array
+    i = offset + tx + ty * bw
+    
+    if i < n:
         nn = neighborsCount[i];
 
         roloc = 0.0;
 
         for pj in prange(0, nn):
-            j = neighbors[i * ngmax + pj];
+            j = neighbors[(i-offset) * ngmax + pj];
 
             xx = x[i] - x[j];
             yy = y[i] - y[j];
@@ -55,39 +61,6 @@ def compute_density(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro):
 
         ro[i] = roloc + m[i] * K / (h[i] * h[i] * h[i]);
 
-# Compute density here
-@cuda.jit
-def compute_density_cuda(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro, K):
-    tx = cuda.threadIdx.x
-    # Block id in a 1D grid
-    ty = cuda.blockIdx.x
-    # Block width, i.e. number of threads per block
-    bw = cuda.blockDim.x
-    # Compute flattened index inside the array
-    i = tx + ty * bw
-    
-    nn = neighborsCount[i];
-
-    roloc = 0.0;
-
-    for pj in prange(0, nn):
-        j = neighbors[i * ngmax + pj];
-
-        xx = x[i] - x[j];
-        yy = y[i] - y[j];
-        zz = z[i] - z[j];
-
-        dist = math.sqrt(xx * xx + yy * yy + zz * zz);
-
-        # SPH Kernel
-        vloc = wharmonic(dist / h[i]);
-
-        w = K * vloc * vloc * vloc * vloc * vloc * vloc;
-        value = w / (h[i] * h[i] * h[i]);
-
-        roloc = roloc + value * m[j];
-
-    ro[i] = roloc + m[i] * K / (h[i] * h[i] * h[i]);
 
 # Load everything
 # ================
@@ -113,12 +86,6 @@ neighbors = np.fromfile(f, dtype=np.int32, count=n*ngmax)
 
 f.close()
 
-ro = np.empty([n], dtype=np.double)
-start = time.time()
-compute_density(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro);
-end = time.time()
-print('Elapsed time: ', end - start)
-
 # CUDA call
 # =========
 
@@ -134,8 +101,10 @@ print('Elapsed time: ', end - start)
 # CUDA Async call
 # ======================
 
-ro = np.empty([n], dtype=np.double)
+# Change to 1 for sync call equivalent
 nChunks = 100
+
+ro = np.empty([n], dtype=np.double)
 start = time.time()
 
 dx = cuda.to_device(x)
