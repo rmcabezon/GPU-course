@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pyopencl as cl
 import matplotlib.pyplot as plt
-
+from skimage import io
 '''
 This is an example of how to define a sampler from PyOpenCL and pass
 it to the kernel. We resample the image so that it is rotated.
@@ -22,6 +22,10 @@ def main():
 
     # prepare data
     imgIn = cv2.imread('photographer.png', cv2.IMREAD_GRAYSCALE)
+    imgIn2 = io.imread('photographer.png')
+
+    image_path = "https://homepages.cae.wisc.edu/~ece533/images/cameraman.tif"
+    imgIn2 = io.imread(image_path)
 
     rotation_angle = np.pi/4
     cos_theta = np.cos(rotation_angle)
