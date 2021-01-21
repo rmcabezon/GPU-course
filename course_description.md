@@ -47,57 +47,16 @@ Some knowledge of C/C++, Fortran or python is necessary.
 
 # course Notes 
 
-## notebooks
-
-notebook : matrix multiplication
-	-> thread throughout the course.
-	-> different languages
-	-> python is the red thread
-
-
-notebook : Kmeans
-	add cartoon about Kmean
-	add functions for fairer comparison
-	add lesson on API
-
-	test : shuffle the point : is the speedup different?
-
-	* goal : provide a 1st taste of the API
-
-
-
-notebook : genome simulation
-
-	* goal : raise awareness of the importance of limited memory of GPU
-	* goal : generate random numbers on GPU
-	* goal : GPU code that makes a problem actually tractable
-
-
-notebook : c++ ?
-
-
-
-notebook : image processing
-	* convolution : memory on the GPU
-	* hardware : openCL kernel
-	* erosion (to skip?)
-
-
-
-notebook : profiling , asynchronous computation
-
-
 ## course outline
 
 9:00
 
  * Intro slides (only mentions pitfalls and mem management ?) 1.5 h?
  
-10:30 break 15min
+( 10:30 break 15min )
 
  * 1st exercice session : 
- 	naive matrix multiplication notebook (0.5 h)
- 	+ exercice (0.333 h ?)
+ 	naive matrix multiplication notebook with integrated interactive exs (1h?)
 
 11:30
 
@@ -116,31 +75,37 @@ notebook : profiling , asynchronous computation
 
  * Common pitfalls : branching , asynchronicity (0.75 h)
  
- * example for common pitfall TBD (SPH) ? (0.25 h)
-
-15:00 ? break 15min
-
  * Memory management ( 0.5- h ) (3 slides)
 
  * examples image manipulation notebooks ( 1+ h )
 
- * Monitoring (using SPH notebook)? (0.5 h )
+( 16:00 : break 15min )
+
+ * overlapping and monitoring  (using SPH notebook) (0.5 h )
+
 
 17:00
 
  * Outro slides (tips and tricks, other libraries, final remarks) ( 0.25h )
 
- * exercice (0.5 h )
+ * free-form exercice ( ??? )
 
 
 
 
 
-## google collab 
+## google colab 
 
  * free
  * disconnect affter 20 min of idleness
  * need account creation
  * easy to connect to . A couple slides disseminated in advance should do the trick.
+
+
+## other logisitcal aspects
+
+ * dissemination : website
+ * discussion : google doc 
+
 
 
