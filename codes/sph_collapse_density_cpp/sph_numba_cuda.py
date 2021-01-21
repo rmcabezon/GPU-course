@@ -102,7 +102,9 @@ f.close()
 # ======================
 
 # Change to 1 for sync call equivalent
-nChunks = 100
+nChunks = 1
+# nStreams = 2
+# streams = [cuda.stream() for i in range(0,nStreams)]
 
 ro = np.empty([n], dtype=np.double)
 start = time.time()
@@ -118,7 +120,6 @@ dneighborsCount = cuda.to_device(neighborsCount)
 for i in range(0,nChunks):
     chunkSize = int(n / nChunks)
     offset = chunkSize * i
-    # print('Processing stream: ', i, ' with chunkSize: ', chunkSize, ' and offset: ', offset)
     stream = cuda.stream()
     
     b = i * chunkSize * ngmax
@@ -131,7 +132,7 @@ for i in range(0,nChunks):
     start = time.time()
     compute_density_cuda[blockspergrid, threadsperblock, stream](n, ngmax, dneighbors, dneighborsCount, dx, dy, dz, dh, dm, dro, K, offset)
 
-    stream.synchronize()
+    # stream.synchronize()
     
 ro = dro.copy_to_host()
 
