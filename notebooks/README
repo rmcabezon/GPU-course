@@ -1,9 +1,0 @@
-This folder contains the jupyter notebooks used for the course.
-
-
-* BinaryOps.ipynb
-* RandomNumber.ipynb
-* EvolWithSelection.ipynb
-* Kmeans_naiveNumbaCUDA.ipynb : optimization of an implementation of the Kmeans machine learning algorithm with numba.cuda
-
-
