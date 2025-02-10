@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <omp.h>
 #include "utils.hpp"
 
 void mul(const float *m1, const float *m2, float *m3, int n)
