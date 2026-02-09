@@ -15,7 +15,7 @@ threads:
 	$(CXX) $(CXXFLAGS) -o threads threads.cpp
 
 target:
-	$(CXX) $(CXXFLAGS) -o target target.cpp
+	$(CXX) $(CXXFLAGS) -o target target.cpp 
 
 cuda:
 	$(NVCC) $(NVCCFLAGS) -o cuda cuda.cu

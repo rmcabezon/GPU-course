@@ -61,20 +61,20 @@ def compute_density_cuda(n, ngmax, neighbors, neighborsCount, x, y, z, h, m, ro,
 
         ro[i] = roloc + m[i] * K / (h[i] * h[i] * h[i]);
 
-
 # Load everything
 # ================
 
 # Reads the input file
 # Calls compute_density
 # Write the result in out.txt
-f = open('/scicore/home/scicore/GROUP/gpu_course/pdata')
+# f = open('/scicore/home/scicore/GROUP/gpu_course/pdata')
+f = open('/home/razlock/Downloads/pdata')
 
 if f.closed == True:
     print("Error opening file pdata")
 
-n = int(np.fromfile(f, dtype=np.int64, count=1))
-ngmax = int(np.fromfile(f, dtype=np.int64, count=1))
+n = int(np.fromfile(f, dtype=np.int64, count=1)[0])
+ngmax = int(np.fromfile(f, dtype=np.int64, count=1)[0])
 
 x = np.fromfile(f, dtype=np.double, count=n)
 y = np.fromfile(f, dtype=np.double, count=n)
@@ -102,7 +102,7 @@ f.close()
 # ======================
 
 # Change to 1 for sync call equivalent
-nChunks = 1
+nChunks = 8
 # nStreams = 2
 # streams = [cuda.stream() for i in range(0,nStreams)]
 
@@ -127,7 +127,7 @@ for i in range(0,nChunks):
     dneighbors = cuda.to_device(neighbors[b:e], stream=stream)
     
     K = compute_3d_k(6.0)
-    threadsperblock = 32
+    threadsperblock = 64
     blockspergrid = (chunkSize + (threadsperblock - 1)) // threadsperblock
     start = time.time()
     compute_density_cuda[blockspergrid, threadsperblock, stream](n, ngmax, dneighbors, dneighborsCount, dx, dy, dz, dh, dm, dro, K, offset)

@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 {
     // Read input file`
     std::ifstream in;
-    in.open("/scicore/home/scicore/GROUP/gpu_course/pdata", std::ofstream::out | std::ofstream::binary);
+    in.open("/home/razlock/Downloads/pdata", std::ofstream::out | std::ofstream::binary);
 
     if (in.is_open() == false)
     {
